@@ -1,17 +1,13 @@
-mongo = require 'mongodb'
+mongo = (require 'tingodb')();
 path = require 'path'
 dbName = path.basename(process.cwd()).replace(/\./, "-")
 
-dbHost = process.env.MONGODB_HOST || 'localhost'
-dbPort = process.env.MONGODB_PORT || mongo.Connection.DEFAULT_PORT
-
-db = new mongo.Db "concrete_#{ dbName }", new mongo.Server(dbHost, dbPort, {auto_reconnect: true}), {}
+db = new mongo.Db process.env.HOME + "/.concrete/db_#{ dbName }", { name : dbName }
 db.open (err) ->
     if err
       console.log 'There was an error creating a connection with the Mongo database. Please check that MongoDB is properly installed and running.'.red
       console.log err
       process.exit 1
-ObjectID = mongo.BSONPure.ObjectID
 
 jobs = module.exports =
     current: null
@@ -45,7 +41,7 @@ jobs = module.exports =
 
     get: (id, next) ->
         db.collection 'jobs', (error, collection) ->
-            collection.findOne {_id: new ObjectID id}, (error, job) ->
+            collection.findOne {_id: id}, (error, job) ->
                 if job?
                     next job
                 else
@@ -57,7 +53,7 @@ jobs = module.exports =
 
     getLog: (id, next)->
         db.collection 'jobs', (error, collection) ->
-            collection.findOne {_id: new ObjectID id}, (error, job) ->
+            collection.findOne {_id: id}, (error, job) ->
                 if job?
                     next job.log
                 else
@@ -65,7 +61,7 @@ jobs = module.exports =
 
     updateLog: (id, string, next)->
         db.collection 'jobs', (error, collection) ->
-            collection.findOne {_id: new ObjectID id}, (error, job) ->
+            collection.findOne {_id: id}, (error, job) ->
                 console.log "update log for job #{job}, #{string}"
                 return no if not job?
                 job.log += "#{string} <br />"
@@ -74,7 +70,7 @@ jobs = module.exports =
 
     currentComplete: (success, next)->
         db.collection 'jobs', (error, collection) ->
-            collection.findOne {_id: new ObjectID jobs.current}, (error, job) ->
+            collection.findOne {_id: jobs.current}, (error, job) ->
                 return no if not job?
                 job.running = no
                 job.finished = yes
@@ -98,7 +94,9 @@ getJobs = (filter, next)->
     db.collection 'jobs', (error, collection) ->
         if filter?
             collection.find(filter).sort({addedTime: 1}).toArray (error, results) ->
+                console.log(error, results)
                 next results
         else
             collection.find().sort({addedTime: 1}).toArray (error, results) ->
+                console.log(error, results)
                 next results

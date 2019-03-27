@@ -3,7 +3,7 @@ colors = require 'colors'
 git = require './git'
 server = require './server'
 exec = require('child_process').exec
-mongo = require 'mongodb'
+mongo = (require 'tingodb')()
 jobs = require './jobs'
 
 

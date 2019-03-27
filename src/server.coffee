@@ -54,6 +54,7 @@ app.configure 'production', ->
 deferredApp = ->
   app.get '/', (req, res) ->
       jobs.getAll (jobs)->
+          console.log (jobs)
           res.render 'index',
               project: path.basename process.cwd()
               jobs: jobs
